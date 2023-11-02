@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="Cache" content="no-cache">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>我的收藏夹</title>
+    <script src="~/js/jquery-1.5/jquery-1.5.min.js"></script> 
+    <script src="~/js/index.js?t=<%= DateTime.Now.Ticks %>"></script>
+    <script src="~/js/template/templateengine.js"></script>
+    <!-- 在<head>标签中引入SweetAlert2的CSS文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"> 
+    <!-- 在</body>标签前引入SweetAlert2的JS文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <link href="~/css/index.css?t=<%= DateTime.Now.Ticks %>" rel="stylesheet" />
+    <script type="text/template" id="template_content">
+
+        <# for ( var i = 0; i < data.length; i++ ) { #>
+            <div class="classify-title">
+                <span class="id" style="display: none"><#=data[i].id#></span>
+                <span><#=data[i].type#></span>
+                <span>（<#=data[i].description#>）</span>
+                @* <span class="delete-btn" onclick="delItem(event)" >—</span> *@
+            </div>
+            <div class="main-box">
+                <# for ( var j = 0; j < data[i].items.length; j++ ) { #>
+                    <div class="block-box">
+                        <span class="delete-btn" onclick="delItem(event)" >—</span>
+                        <a href="javascript:void(0);" title="<#=data[i].items[j].url#>">
+                            <div class="up-box">
+                                <span class="id" style="display: none"><#=data[i].id#></span>
+                                <span class="uid" style="display: none"><#=data[i].items[j].id#></span>
+                                <span class="tit"><#=data[i].items[j].name#></span>
+                                <span class="path">（<#=data[i].items[j].url#>）</span>
+                            </div>
+                        </a>
+                        <a href="<#=data[i].items[j].url#>" title="<#=data[i].items[j].description#>" target="<#=data[i].items[j].target#>">
+                            <div class="down-box"><#=data[i].items[j].description#></div>
+                        </a>
+                    </div>
+                <# } #>
+             </div>
+        <# } #>
+    </script>
+</head>
+<body>
+    <div class="con-main">
+        <div class="search-box">
+            <input type="text" placeholder="请输入关键字" class="txt-search" id="searchKey" autofocus="autofocus" />
+            <a href="javascript:void(0);" onclick="javascript:clearSearch();" class="close-del">×</a>
+            <button class="go-search" onclick="javascript:goSearch();">搜索</button>
+        </div>
+        <div>
+            <span style="font-size:30px;color:#005580;cursor:pointer;" onclick="addItem()">+</span>
+        </div>
+        <div class="main-box"></div>
+    </div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <label for="type">分类</label><span style="color:red;"> *</span>
+            <input type="text" id="type" class="modal-input" required="required">
+            <br>
+            <label for="name">标题</label><span style="color:red;"> *</span>
+            <input type="text" id="name" class="modal-input" required="required">
+            <br>
+            <label for="url">Url</label><span style="color:red;"> *</span>
+            <input type="text" id="url" class="modal-input" required="required">
+            <br>
+            <br>
+            <label for="description">描述</label>
+            <textarea id="description" class="modal-input"></textarea>
+            <br>
+            <span style="font-size:12px;color:red;display:none;" id="errMsg">请输入必填项</span>
+            <div class="button-container">
+                <button onclick="saveItem()">保存</button>
+                <button onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+    <div id="toastNotification" class="toast-notification"></div>
+</body>
+</html>
