@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.Options;
-using MyFavorites.Core.Models.Dto;
 using MyFavorites.Core.Helpers;
+using MyFavorites.Core.Models;
+using MyFavorites.Core.Models.Dto;
 using System.Text;
 using System.Text.Json;
-using MyFavorites.Core.Models;
 
 namespace MyFavorites.Core.Services
 {
     public class FavoritesFromFileService : IFavoritesService
     {
-        private readonly IEnumerable<Favorites> _favorites;
+        private List<FileFavorites> _favorites;
         private readonly string _filePath;
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace MyFavorites.Core.Services
                 PropertyNameCaseInsensitive = true
             };
             options.Converters.Add(new StringOrIntConverter());
-            _favorites = JsonSerializer.Deserialize<List<Favorites>>(jsonString, options);
+            _favorites = JsonSerializer.Deserialize<List<FileFavorites>>(jsonString, options);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace MyFavorites.Core.Services
         public async Task CreateOrUpdateAsync(FavoritesDto input)
         {
             var favorites = _favorites.Where(p => p.Type == input.Type).FirstOrDefault();
-            var items = new Items
+            var items = new FileItems
             {
                 Id = Guid.NewGuid().ToString(),
                 Url = input.Url.Trim(),
@@ -53,7 +53,7 @@ namespace MyFavorites.Core.Services
                     Type = input.Type.Trim(),
                     Description = input.Type.Trim(),
                     Sort = sort + 1,
-                    Items = new List<Items> { items }
+                    Items = new List<FileItems> { items }
                 };
             }
             else
@@ -74,11 +74,18 @@ namespace MyFavorites.Core.Services
         /// <returns></returns>
         public async Task RemoveAsync(string id, string uid)
         {
-            Favorites favorites = await GetAsync(id);
+            FileFavorites favorites = _favorites.FirstOrDefault(p => p.Id == id);
             if (string.IsNullOrEmpty(uid))
-                _favorites.ToList().Remove(favorites);
-            var item = favorites.Items.Find(p => p.Id == uid);
-            favorites.Items.Remove(item);
+                _favorites.Remove(favorites);
+            if (favorites.Items.Count > 1)
+            {
+                var item = favorites.Items.Find(p => p.Id == uid);
+                favorites.Items.Remove(item);
+            }
+            else
+            {
+                _favorites.Remove(favorites);
+            }
             await UpdateFileAsync();
         }
 
@@ -86,14 +93,16 @@ namespace MyFavorites.Core.Services
         /// 获取全部数据
         /// </summary>
         /// <returns></returns>
-        public Task<List<Favorites>> Get() => Task.FromResult(_favorites.ToList());
+        //public Task<List<FileFavorites>> Get(string keyWord)
+        //{
+        //    return Task.FromResult(_favorites);
+        //}
 
-        /// <summary>
-        /// 根据ID获取实体
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public Task<Favorites> GetAsync(string id) => Task.FromResult(_favorites.FirstOrDefault(p => p.Id == id) ?? new Favorites());
+        public Task<List<T>> Get<T>(string keyWord)
+        {
+            List<T> filteredList = _favorites.Cast<T>().ToList();
+            return Task.FromResult(filteredList);
+        }
 
         /// <summary>
         /// 更新文件数据

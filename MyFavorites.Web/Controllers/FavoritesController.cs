@@ -23,46 +23,20 @@ namespace MyFavorites.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<List<Favorites>> Get() =>
-            await _favoritesService.Get();
-
-        [HttpGet("{id:length(24)}")]
-        public async Task<ActionResult<Favorites>> Get(string id)
-        {
-            var favorites = await _favoritesService.GetAsync(id);
-
-            if (favorites is null)
-            {
-                return NotFound();
-            }
-
-            return favorites;
-        }
+        public async Task<dynamic> Get(string keyWord) =>
+            await _favoritesService.Get<dynamic>(keyWord);
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] FavoritesDto input)
         {
             await _favoritesService.CreateOrUpdateAsync(input);
-
             return CreatedAtAction(nameof(Get), new { id = input.Id }, input);
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] FavoritesDto input)
         {
-            var favorites = await _favoritesService.GetAsync(input.Id);
-
-            if (favorites is null)
-            {
-                return NotFound();
-            }
-            if (!favorites.Items.Any(p => p.Id == input.Uid))
-            {
-                return NotFound();
-            }
-
             await _favoritesService.RemoveAsync(input.Id, input.Uid);
-
             return NoContent();
         }
     }

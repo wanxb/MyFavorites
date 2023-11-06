@@ -1,22 +1,14 @@
-﻿using MyFavorites.Core.Models;
-using MyFavorites.Core.Models.Dto;
+﻿using MyFavorites.Core.Models.Dto;
 
 namespace MyFavorites.Core.Services
 {
     public interface IFavoritesService
     {
         /// <summary>
-        /// 获取全部数据
+        /// 获取数据
         /// </summary>
         /// <returns></returns>
-        Task<List<Favorites>> Get();
-
-        /// <summary>
-        ///根据ID获取实体
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        Task<Favorites?> GetAsync(string id);
+        Task<List<T>> Get<T>(string keyWord);
 
         /// <summary>
         /// 插入或更新数据

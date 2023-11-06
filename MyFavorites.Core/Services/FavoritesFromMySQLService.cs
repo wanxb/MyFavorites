@@ -17,7 +17,7 @@ namespace MyFavorites.Core.Services
         {
             var favoritesAll = await _favoriteRepository.GetFavoritesAsync();
             var favorites = favoritesAll.FirstOrDefault(p => p.Type == input.Type);
-            Items items = new()
+            MySQLItems items = new()
             {
                 Url = input.Url.Trim(),
                 Name = input.Name.Trim(),
@@ -33,7 +33,7 @@ namespace MyFavorites.Core.Services
                     Type = input.Type.Trim(),
                     Description = input.Type.Trim(),
                     Sort = sort + 1,
-                    Items = new List<Items> { items }
+                    Items = new List<MySQLItems> { items }
                 };
                 await _favoriteRepository.InsertAsync(favorites);
             }
@@ -46,28 +46,41 @@ namespace MyFavorites.Core.Services
             }
         }
 
-        public async Task<List<Favorites>> Get()
+        public async Task<List<MySQLFavorites>> Get(string keyWord)
         {
             var favorites = await _favoriteRepository.GetFavoritesAsync();
             var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
 
             var query = from favorite in favorites
                         join items in favorites_items on favorite.Id equals items.Fid
-                        select new Favorites
+                        select new MySQLFavorites
                         {
                             Id = favorite.Id,
                             Type = favorite.Type,
                             Description = favorite.Description,
                             Sort = favorite.Sort,
-                            Items = new List<Items> { items }
+                            Items = new List<MySQLItems> { items }
                         };
 
             return query.ToList();
         }
 
-        public Task<Favorites?> GetAsync(string id)
+        public async Task<List<T>> Get<T>(string keyWord)
         {
-            throw new NotImplementedException();
+            var favorites = await _favoriteRepository.GetFavoritesAsync();
+            var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
+
+            var query = from favorite in favorites
+                        join items in favorites_items on favorite.Id equals items.Fid
+                        select new MySQLFavorites
+                        {
+                            Id = favorite.Id,
+                            Type = favorite.Type,
+                            Description = favorite.Description,
+                            Sort = favorite.Sort,
+                            Items = new List<MySQLItems> { items }
+                        };
+            return query.Cast<T>().ToList();
         }
 
         public async Task RemoveAsync(string id, string uid)

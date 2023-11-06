@@ -7,14 +7,13 @@ namespace MyFavorites.Core.Services
 {
     public class FavoritesFromMongoDBService : FavoritesBaseService, IFavoritesService
     {
-        private readonly IMongoCollection<Favorites> _favoritesCollection;
+        private readonly IMongoCollection<MongoDBFavorites> _favoritesCollection;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="bookStoreDatabaseSettings"></param>
-        public FavoritesFromMongoDBService(
-            IOptions<DataBaseSettings> bookStoreDatabaseSettings)
+        public FavoritesFromMongoDBService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
         {
             var mongoClient = new MongoClient(
                 bookStoreDatabaseSettings.Value.ConnectionString);
@@ -22,7 +21,7 @@ namespace MyFavorites.Core.Services
             var mongoDatabase = mongoClient.GetDatabase(
                 bookStoreDatabaseSettings.Value.DatabaseName);
 
-            _favoritesCollection = mongoDatabase.GetCollection<Favorites>(
+            _favoritesCollection = mongoDatabase.GetCollection<MongoDBFavorites>(
                 bookStoreDatabaseSettings.Value.BooksCollectionName);
         }
 
@@ -35,7 +34,7 @@ namespace MyFavorites.Core.Services
         {
             var favorites = await _favoritesCollection.Find(x => x.Type == input.Type).FirstOrDefaultAsync();
 
-            Items items = new()
+            MongoDBItems items = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 Url = input.Url.Trim(),
@@ -52,7 +51,7 @@ namespace MyFavorites.Core.Services
                     Type = input.Type.Trim(),
                     Description = input.Type.Trim(),
                     Sort = sort + 1,
-                    Items = new List<Items> { items }
+                    Items = new List<MongoDBItems> { items }
                 };
                 await CreateAsync(favorites);
             }
@@ -75,36 +74,40 @@ namespace MyFavorites.Core.Services
         {
             if (!string.IsNullOrEmpty(id) && string.IsNullOrEmpty(uid))
                 await RemoveAsync(id);
-            var favorites = await GetAsync(id);
+            var favorites = await _favoritesCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
-            var item = favorites.Items.Find(p => p.Id == uid);
-
-            favorites.Items.Remove(item);
-
-            await UpdateAsync(favorites.Id, favorites);
+            if (favorites.Items.Count > 1)
+            {
+                var item = favorites.Items.Find(p => p.Id == uid);
+                favorites.Items.Remove(item);
+                await UpdateAsync(favorites.Id, favorites);
+            }
+            else
+            {
+                await RemoveAsync(id);
+            }
         }
 
         /// <summary>
         /// 查询全部数据
         /// </summary>
         /// <returns></returns>
-        public async Task<List<Favorites>> Get() =>
-         await _favoritesCollection.Find(_ => true).ToListAsync();
-
-        /// <summary>
-        /// 根据ID获取实体
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<Favorites?> GetAsync(string id) =>
-            await _favoritesCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        //public async Task<List<Favorites>> Get(string keyWord)
+        //{
+        //    return await _favoritesCollection.Find(_ => true).ToListAsync();
+        //}
+        public async Task<List<T>> Get<T>(string keyWord)
+        {
+            var data = await _favoritesCollection.Find(_ => true).ToListAsync();
+            return data.Cast<T>().ToList();
+        }
 
         /// <summary>
         /// 插入数据
         /// </summary>
         /// <param name="newFavorites"></param>
         /// <returns></returns>
-        private async Task CreateAsync(Favorites newFavorites) =>
+        private async Task CreateAsync(MongoDBFavorites newFavorites) =>
             await _favoritesCollection.InsertOneAsync(newFavorites);
 
         /// <summary>
@@ -113,7 +116,7 @@ namespace MyFavorites.Core.Services
         /// <param name="id"></param>
         /// <param name="updatedFavorites"></param>
         /// <returns></returns>
-        private async Task UpdateAsync(string id, Favorites updatedFavorites) =>
+        private async Task UpdateAsync(string id, MongoDBFavorites updatedFavorites) =>
             await _favoritesCollection.ReplaceOneAsync(x => x.Id == id, updatedFavorites);
 
         /// <summary>
