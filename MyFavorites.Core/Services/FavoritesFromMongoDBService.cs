@@ -26,6 +26,17 @@ namespace MyFavorites.Core.Services
         }
 
         /// <summary>
+        /// 查询数据
+        /// </summary>
+        /// <param name="keyWord"></param>
+        /// <returns></returns>
+        public async Task<List<T>> Get<T>(string keyWord)
+        {
+            var data = await _favoritesCollection.Find(_ => true).ToListAsync();
+            return data.Cast<T>().ToList();
+        }
+
+        /// <summary>
         /// 插入或更新数据
         /// </summary>
         /// <param name="input"></param>
@@ -86,20 +97,6 @@ namespace MyFavorites.Core.Services
             {
                 await RemoveAsync(id);
             }
-        }
-
-        /// <summary>
-        /// 查询全部数据
-        /// </summary>
-        /// <returns></returns>
-        //public async Task<List<Favorites>> Get(string keyWord)
-        //{
-        //    return await _favoritesCollection.Find(_ => true).ToListAsync();
-        //}
-        public async Task<List<T>> Get<T>(string keyWord)
-        {
-            var data = await _favoritesCollection.Find(_ => true).ToListAsync();
-            return data.Cast<T>().ToList();
         }
 
         /// <summary>

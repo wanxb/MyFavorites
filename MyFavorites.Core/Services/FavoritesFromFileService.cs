@@ -2,15 +2,17 @@
 using MyFavorites.Core.Helpers;
 using MyFavorites.Core.Models;
 using MyFavorites.Core.Models.Dto;
+using SharpCompress.Common;
 using System.Text;
 using System.Text.Json;
+using ZstdSharp.Unsafe;
 
 namespace MyFavorites.Core.Services
 {
     public class FavoritesFromFileService : IFavoritesService
     {
         private List<FileFavorites> _favorites;
-        private readonly string _filePath;
+        private string _filePath;
 
         /// <summary>
         ///构造函数
@@ -18,19 +20,44 @@ namespace MyFavorites.Core.Services
         /// <param name="bookStoreDatabaseSettings"></param>
         public FavoritesFromFileService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
         {
-            _filePath = bookStoreDatabaseSettings.Value.ConnectionString;
-            string jsonString = System.IO.File.ReadAllText(_filePath);
-            if (string.IsNullOrEmpty(jsonString)) return;
+            _filePath = bookStoreDatabaseSettings?.Value?.ConnectionString;
+
+            if (string.IsNullOrEmpty(_filePath))
+            {
+                _filePath = Path.Combine(Directory.GetCurrentDirectory(), "datasource.json");
+            }
+
+            if (!File.Exists(_filePath))
+            {
+                File.Create(_filePath).Close();
+            }
+
+            string jsonString = File.ReadAllText(_filePath);
+
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
             options.Converters.Add(new StringOrIntConverter());
-            _favorites = JsonSerializer.Deserialize<List<FileFavorites>>(jsonString, options);
+
+            _favorites = string.IsNullOrEmpty(jsonString)
+                ? new List<FileFavorites>()
+                : JsonSerializer.Deserialize<List<FileFavorites>>(jsonString, options);
         }
 
         /// <summary>
-        /// 更新数据
+        /// 获取数据
+        /// </summary>
+        /// <param name="keyWord"></param>
+        /// <returns></returns>
+        public Task<List<T>> Get<T>(string keyWord)
+        {
+            List<T> filteredList = _favorites.Cast<T>().ToList();
+            return Task.FromResult(filteredList);
+        }
+
+        /// <summary>
+        /// 更新
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -50,11 +77,13 @@ namespace MyFavorites.Core.Services
                 int sort = _favorites.Any() ? _favorites.OrderByDescending(o => o.Sort).First().Sort : 0;
                 favorites = new()
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Type = input.Type.Trim(),
                     Description = input.Type.Trim(),
                     Sort = sort + 1,
                     Items = new List<FileItems> { items }
                 };
+                _favorites.Add(favorites);
             }
             else
             {
@@ -62,12 +91,11 @@ namespace MyFavorites.Core.Services
                 items.Sort = sort + 1;
                 favorites.Items.Add(items);
             }
-            _favorites.Append(favorites);
             await UpdateFileAsync();
         }
 
         /// <summary>
-        /// 删除数据
+        /// 删除
         /// </summary>
         /// <param name="id"></param>
         /// <param name="uid"></param>
@@ -87,21 +115,6 @@ namespace MyFavorites.Core.Services
                 _favorites.Remove(favorites);
             }
             await UpdateFileAsync();
-        }
-
-        /// <summary>
-        /// 获取全部数据
-        /// </summary>
-        /// <returns></returns>
-        //public Task<List<FileFavorites>> Get(string keyWord)
-        //{
-        //    return Task.FromResult(_favorites);
-        //}
-
-        public Task<List<T>> Get<T>(string keyWord)
-        {
-            List<T> filteredList = _favorites.Cast<T>().ToList();
-            return Task.FromResult(filteredList);
         }
 
         /// <summary>

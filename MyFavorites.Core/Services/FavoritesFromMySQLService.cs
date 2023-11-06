@@ -13,6 +13,34 @@ namespace MyFavorites.Core.Services
             _favoriteRepository = favoriteRepository;
         }
 
+        /// <summary>
+        /// 查询数据
+        /// </summary>
+        /// <param name="keyWord"></param>
+        /// <returns></returns>
+        public async Task<List<T>> Get<T>(string keyWord)
+        {
+            var favorites = await _favoriteRepository.GetFavoritesAsync();
+            var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
+
+            var query = from favorite in favorites
+                        join items in favorites_items on favorite.Id equals items.Fid
+                        select new MySQLFavorites
+                        {
+                            Id = favorite.Id,
+                            Type = favorite.Type,
+                            Description = favorite.Description,
+                            Sort = favorite.Sort,
+                            Items = new List<MySQLItems> { items }
+                        };
+            return query.Cast<T>().ToList();
+        }
+
+        /// <summary>
+        /// 插入或更新数据
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public async Task CreateOrUpdateAsync(FavoritesDto input)
         {
             var favoritesAll = await _favoriteRepository.GetFavoritesAsync();
@@ -46,43 +74,12 @@ namespace MyFavorites.Core.Services
             }
         }
 
-        public async Task<List<MySQLFavorites>> Get(string keyWord)
-        {
-            var favorites = await _favoriteRepository.GetFavoritesAsync();
-            var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
-
-            var query = from favorite in favorites
-                        join items in favorites_items on favorite.Id equals items.Fid
-                        select new MySQLFavorites
-                        {
-                            Id = favorite.Id,
-                            Type = favorite.Type,
-                            Description = favorite.Description,
-                            Sort = favorite.Sort,
-                            Items = new List<MySQLItems> { items }
-                        };
-
-            return query.ToList();
-        }
-
-        public async Task<List<T>> Get<T>(string keyWord)
-        {
-            var favorites = await _favoriteRepository.GetFavoritesAsync();
-            var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
-
-            var query = from favorite in favorites
-                        join items in favorites_items on favorite.Id equals items.Fid
-                        select new MySQLFavorites
-                        {
-                            Id = favorite.Id,
-                            Type = favorite.Type,
-                            Description = favorite.Description,
-                            Sort = favorite.Sort,
-                            Items = new List<MySQLItems> { items }
-                        };
-            return query.Cast<T>().ToList();
-        }
-
+        /// <summary>
+        /// 删除数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="uid"></param>
+        /// <returns></returns>
         public async Task RemoveAsync(string id, string uid)
         {
             await _favoriteRepository.DeleteAsync(id, uid);
