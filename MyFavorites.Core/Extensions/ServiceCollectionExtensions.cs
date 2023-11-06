@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MyFavorites.Core.Models;
+using MyFavorites.Core.Services.Favorites;
 using MyFavorites.Core.Services;
 using System;
 
@@ -43,7 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 //}
                 if (x.DatabaseType == DatabaseType.File)
                 {
-                    services.AddTransient<IFavoritesService, FavoritesFromFileService>();
+                    services.AddTransient<IFavoritesService, FileService>();
                 }
             });
 

@@ -2,13 +2,13 @@
 using MyFavorites.Core.Models.Dto;
 using MyFavorites.Core.Repository;
 
-namespace MyFavorites.Core.Services
+namespace MyFavorites.Core.Services.Favorites
 {
-    public class FavoritesFromMySQLService : IFavoritesService
+    public class MySQLService : FavoritesBaseService, IFavoritesService
     {
         private readonly IFavoritesRepository _favoriteRepository;
 
-        public FavoritesFromMySQLService(IFavoritesRepository favoriteRepository)
+        public MySQLService(IFavoritesRepository favoriteRepository)
         {
             _favoriteRepository = favoriteRepository;
         }

@@ -2,23 +2,21 @@
 using MyFavorites.Core.Helpers;
 using MyFavorites.Core.Models;
 using MyFavorites.Core.Models.Dto;
-using SharpCompress.Common;
 using System.Text;
 using System.Text.Json;
-using ZstdSharp.Unsafe;
 
-namespace MyFavorites.Core.Services
+namespace MyFavorites.Core.Services.Favorites
 {
-    public class FavoritesFromFileService : IFavoritesService
+    public class FileService : FavoritesBaseService, IFavoritesService
     {
         private List<FileFavorites> _favorites;
-        private string _filePath;
+        private readonly string _filePath;
 
         /// <summary>
         ///构造函数
         /// </summary>
         /// <param name="bookStoreDatabaseSettings"></param>
-        public FavoritesFromFileService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
+        public FileService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
         {
             _filePath = bookStoreDatabaseSettings?.Value?.ConnectionString;
 

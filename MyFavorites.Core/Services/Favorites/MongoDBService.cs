@@ -3,17 +3,17 @@ using MongoDB.Driver;
 using MyFavorites.Core.Models;
 using MyFavorites.Core.Models.Dto;
 
-namespace MyFavorites.Core.Services
+namespace MyFavorites.Core.Services.Favorites
 {
-    public class FavoritesFromMongoDBService : FavoritesBaseService, IFavoritesService
+    public class MongoDBService : FavoritesBaseService, IFavoritesService
     {
         private readonly IMongoCollection<MongoDBFavorites> _favoritesCollection;
 
         /// <summary>
         /// 构造函数
-        /// </summary>
+        //v/ </summary>
         /// <param name="bookStoreDatabaseSettings"></param>
-        public FavoritesFromMongoDBService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
+        public MongoDBService(IOptions<DataBaseSettings> bookStoreDatabaseSettings)
         {
             var mongoClient = new MongoClient(
                 bookStoreDatabaseSettings.Value.ConnectionString);
