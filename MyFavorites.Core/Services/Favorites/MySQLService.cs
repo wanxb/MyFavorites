@@ -20,13 +20,25 @@ namespace MyFavorites.Core.Services.Favorites
         /// <returns></returns>
         public async Task<List<T>> Get<T>(string keyWord)
         {
-            var favorites = await _favoriteRepository.GetFavoritesAsync();
-            var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
+            var favoritesTask = _favoriteRepository.GetFavoritesAsync();
+            var favoritesItemsTask = _favoriteRepository.GetFavoritesItemsAsync();
+
+            await Task.WhenAll(favoritesTask, favoritesItemsTask);
+
+            var favorites = await favoritesTask;
+            var favorites_items = await favoritesItemsTask;
 
             foreach (var item in favorites)
             {
-                var favoritesItem = favorites_items.Where(p => p.Fid == item.Id).ToList();
-                item.Items = favoritesItem;
+                item.Items = favorites_items
+                    .Where(p => p.Fid == item.Id &&
+                                (string.IsNullOrEmpty(keyWord) ||
+                                 item.Type.ToLower().Contains(keyWord.ToLower()) ||
+                                 item.Description.ToLower().Contains(keyWord.ToLower()) ||
+                                 p.Name.ToLower().Contains(keyWord.ToLower()) ||
+                                 p.Url.ToLower().Contains(keyWord.ToLower()) ||
+                                 p.Description.ToLower().Contains(keyWord.ToLower())))
+                    .ToList();
             }
             return favorites.Cast<T>().ToList();
         }

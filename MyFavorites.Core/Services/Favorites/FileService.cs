@@ -50,8 +50,20 @@ namespace MyFavorites.Core.Services.Favorites
         /// <returns></returns>
         public Task<List<T>> Get<T>(string keyWord)
         {
-            List<T> filteredList = _favorites.Cast<T>().ToList();
-            return Task.FromResult(filteredList);
+            if (!string.IsNullOrWhiteSpace(keyWord))
+            {
+                foreach (var item in _favorites)
+                {
+                    item.Items = item.Items.Where(current =>
+                    item.Type.ToLower().Contains(keyWord.ToLower()) ||
+                    item.Description.ToLower().Contains(keyWord.ToLower()) ||
+                    current.Name.ToLower().Contains(keyWord.ToLower()) ||
+                    current.Url.ToLower().Contains(keyWord.ToLower()) ||
+                    current.Description.ToLower().Contains(keyWord.ToLower()))
+                    .ToList();
+                }
+            }
+            return Task.FromResult(_favorites.Cast<T>().ToList());
         }
 
         /// <summary>

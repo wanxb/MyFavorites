@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MyFavorites.Core.Models;
 using MyFavorites.Core.Models.Dto;
@@ -32,7 +33,18 @@ namespace MyFavorites.Core.Services.Favorites
         /// <returns></returns>
         public async Task<List<T>> Get<T>(string keyWord)
         {
-            var data = await _favoritesCollection.Find(_ => true).ToListAsync();
+            FilterDefinition<MongoDBFavorites> filter = Builders<MongoDBFavorites>.Filter.Empty;
+            if (!string.IsNullOrWhiteSpace(keyWord))
+            {
+                filter = Builders<MongoDBFavorites>.Filter.Or(
+                        Builders<MongoDBFavorites>.Filter.Regex("Type", new BsonRegularExpression(keyWord, "i")),
+                        Builders<MongoDBFavorites>.Filter.Regex("Description", new BsonRegularExpression(keyWord, "i")),
+                        Builders<MongoDBFavorites>.Filter.Regex("Items.Name", new BsonRegularExpression(keyWord, "i")),
+                        Builders<MongoDBFavorites>.Filter.Regex("Items.Url", new BsonRegularExpression(keyWord, "i")),
+                        Builders<MongoDBFavorites>.Filter.Regex("Items.Description", new BsonRegularExpression(keyWord, "i"))
+                );
+            }
+            var data = await _favoritesCollection.Find(filter).ToListAsync();
             return data.Cast<T>().ToList();
         }
 

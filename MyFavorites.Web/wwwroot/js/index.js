@@ -1,30 +1,7 @@
 var modal;
 var closeBtn;
 $(function () {
-    $.getJSON('/favorites/get', function (data) {
-        var kw = decodeURI(getUrlParam('kw'));
-        if (kw && kw != null && kw != "null") {
-            $("#searchKey").val(kw);
-            $(".close-del").show();
-            getSearch(data, kw);
-        }
-        if (data != null) {
-            // 排序方法
-            function jsonSort(a, b) {
-                return a.sort - b.sort;
-            }
-            // 第一层排序
-            data = data.sort(jsonSort);
-            for (var i = 0; i < data.length; i++) {
-                // 第二层排序
-                data[i].items = data[i].items.sort(jsonSort);
-            }
-            // 渲染HTML
-            var outhtml = template2_setdata($('#template_content').html(), data);
-            $('.main-box').html(outhtml);
-        }
-    });
-
+    loadData();
     $(document).keyup(function (event) {
         var kw = document.getElementById("searchKey").value;
         var modalInputs = document.querySelectorAll('.modal-input'); // 获取所有模态框中的输入框
@@ -51,6 +28,34 @@ $(function () {
     modal = document.getElementById("myModal");
     closeBtn = document.getElementsByClassName("close")[0];
 });
+
+function loadData() {
+    var url = '/favorites/get';
+    var kw = decodeURI(getUrlParam('kw'));
+    if (kw && kw != null && kw != "null") {
+        $("#searchKey").val(kw);
+        $(".close-del").show();
+        //getSearch(data, kw);
+        url = url + '?keyWord=' + kw;
+    }
+    $.getJSON(url, function (data) {
+        if (data != null) {
+            // 排序方法
+            function jsonSort(a, b) {
+                return a.sort - b.sort;
+            }
+            // 第一层排序
+            data = data.sort(jsonSort);
+            for (var i = 0; i < data.length; i++) {
+                // 第二层排序
+                data[i].items = data[i].items.sort(jsonSort);
+            }
+            // 渲染HTML
+            var outhtml = template2_setdata($('#template_content').html(), data);
+            $('.main-box').html(outhtml);
+        }
+    });
+}
 
 function delItem(event) {
     var blockBox = event.target.parentElement;
@@ -147,7 +152,6 @@ function getSearch(data, kw) {
             }
         }
         data[i].items = newItems;
-        console.log(data);
     }
 }
 
