@@ -110,7 +110,7 @@ function clearSearch() {
 function goSearch() {
     var kw = document.getElementById("searchKey").value;
     if (kw && kw != null && kw != "null") {
-        window.location.href = encodeURI(encodeURI("Favorites/list?kw=" + kw));
+        window.location.href = encodeURI(encodeURI("../Favorites/list?kw=" + kw));
     } else {
         window.location.href = "../../";
     }
@@ -147,6 +147,7 @@ function getSearch(data, kw) {
             }
         }
         data[i].items = newItems;
+        console.log(data);
     }
 }
 
