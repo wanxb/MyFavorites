@@ -62,7 +62,7 @@ namespace MyFavorites.Core.Services.Favorites
                 Id = Guid.NewGuid().ToString(),
                 Url = input.Url.Trim(),
                 Name = input.Name.Trim(),
-                Description = input.Description.Trim(),
+                Description = input.Description.Trim() ?? input.Name.Trim(),
                 Target = "_blank"
             };
 

@@ -56,7 +56,7 @@ namespace MyFavorites.Core.Services.Favorites
             {
                 Url = input.Url.Trim(),
                 Name = input.Name.Trim(),
-                Description = input.Description.Trim(),
+                Description = input.Description.Trim() ?? input.Name.Trim(),
                 Target = "_blank"
             };
 

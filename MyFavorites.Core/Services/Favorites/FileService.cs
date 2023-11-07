@@ -4,6 +4,7 @@ using MyFavorites.Core.Models;
 using MyFavorites.Core.Models.Dto;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace MyFavorites.Core.Services.Favorites
 {
@@ -79,7 +80,7 @@ namespace MyFavorites.Core.Services.Favorites
                 Id = Guid.NewGuid().ToString(),
                 Url = input.Url.Trim(),
                 Name = input.Name.Trim(),
-                Description = input.Description.Trim(),
+                Description = input.Description.Trim() ?? input.Name.Trim(),
                 Target = "_blank"
             };
             if (favorites == null)
