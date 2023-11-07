@@ -15,16 +15,6 @@ namespace MyFavorites.Core.Repository
         Task<IEnumerable<MySQLItems>> GetFavoritesItemsAsync();
 
         /// <summary>
-        /// 查询实体
-        /// </summary>
-        Task<MySQLFavorites> GetFavoritesAsync(long id);
-
-        /// <summary>
-        /// 查询明细实体
-        /// </summary>
-        Task<MySQLItems> GetFavoritesItemsAsync(long id);
-
-        /// <summary>
         /// 插入
         /// </summary>
         Task<int> InsertAsync(MySQLFavorites model);

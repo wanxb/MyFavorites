@@ -3,6 +3,7 @@ using MyFavorites.Core.Models;
 using MySql.Data.MySqlClient;
 using System.Data;
 using Dapper;
+using ZstdSharp.Unsafe;
 
 namespace MyFavorites.Core.Repository
 {
@@ -15,28 +16,28 @@ namespace MyFavorites.Core.Repository
             _connectionString = options.Value.ConnectionString;
         }
 
-        protected async Task<T> ExecuteScalarAsync<T>(string sql, object param = null)
-        {
-            using var conn = CreateConnection(_connectionString);
-            return await conn.ExecuteScalarAsync<T>(sql, param);
-        }
-
         protected async Task<int> ExecuteAsync(string sql, object param = null)
         {
             using var conn = CreateConnection(_connectionString);
             return await conn.ExecuteAsync(sql, param);
         }
 
-        protected async Task<int> ExecuteAsync(string sql1, string sql2, object param1 = null, object param2 = null)
+        protected async Task<int> ExecuteAsync(string sql1, string sql2, object param1 = null, List<MySQLItems> param2 = null)
         {
-            int result = 0;
+            var result = 0;
             using var conn = CreateConnection(_connectionString);
+            conn.Open();
             using (var transaction = conn.BeginTransaction())
             {
                 try
                 {
-                    result += await ExecuteAsync(sql1, param1);
-                    result += await ExecuteAsync(sql2, param2);
+                    result += await conn.ExecuteAsync(sql1, param1, transaction);
+                    int fid = await conn.QueryFirstAsync<int>("select last_insert_id();", null, transaction);
+                    param2.ForEach(item =>
+                    {
+                        item.Fid ??= fid.ToString();
+                    });
+                    result += await conn.ExecuteAsync(sql2, param2, transaction);
                     transaction.Commit();
                 }
                 catch (Exception ex)
@@ -46,12 +47,6 @@ namespace MyFavorites.Core.Repository
                 }
             }
             return result;
-        }
-
-        protected async Task<T> QueryFirstOrDefaultAsync<T>(string sql, object param = null)
-        {
-            using var conn = CreateConnection(_connectionString);
-            return await conn.QueryFirstOrDefaultAsync<T>(sql, param);
         }
 
         protected async Task<IEnumerable<T>> QueryAsync<T>(string sql, object param = null)

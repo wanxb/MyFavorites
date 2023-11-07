@@ -23,17 +23,12 @@ namespace MyFavorites.Core.Services.Favorites
             var favorites = await _favoriteRepository.GetFavoritesAsync();
             var favorites_items = await _favoriteRepository.GetFavoritesItemsAsync();
 
-            var query = from favorite in favorites
-                        join items in favorites_items on favorite.Id equals items.Fid
-                        select new MySQLFavorites
-                        {
-                            Id = favorite.Id,
-                            Type = favorite.Type,
-                            Description = favorite.Description,
-                            Sort = favorite.Sort,
-                            Items = new List<MySQLItems> { items }
-                        };
-            return query.Cast<T>().ToList();
+            foreach (var item in favorites)
+            {
+                var favoritesItem = favorites_items.Where(p => p.Fid == item.Id).ToList();
+                item.Items = favoritesItem;
+            }
+            return favorites.Cast<T>().ToList();
         }
 
         /// <summary>
@@ -43,7 +38,7 @@ namespace MyFavorites.Core.Services.Favorites
         /// <returns></returns>
         public async Task CreateOrUpdateAsync(FavoritesDto input)
         {
-            var favoritesAll = await _favoriteRepository.GetFavoritesAsync();
+            var favoritesAll = await Get<MySQLFavorites>(string.Empty);
             var favorites = favoritesAll.FirstOrDefault(p => p.Type == input.Type);
             MySQLItems items = new()
             {
@@ -69,7 +64,8 @@ namespace MyFavorites.Core.Services.Favorites
             {
                 int sort = favorites.Items.Any() ? favorites.Items.OrderByDescending(o => o.Sort).First().Sort : 0;
                 items.Sort = sort + 1;
-                favorites.Items.Add(items);
+                items.Fid = favorites.Id;
+                favorites.Items = new List<MySQLItems> { items };
                 await _favoriteRepository.UpdateAsync(favorites);
             }
         }
